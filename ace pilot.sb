@@ -1,0 +1,121 @@
+
+GraphicsWindow.Show()
+GraphicsWindow.Title = "Ace Pilot"
+
+GraphicsWindow.KeyDown = keyDown
+GraphicsWindow.KeyUp = keyUp
+
+For x = 1 To 6
+  powerLevels[x] = 30 + 10 * x
+EndFor
+
+prepVars()
+titleScreen()
+
+Sub titleScreen
+  GraphicsWindow.Clear()
+  GraphicsWindow.DrawText(0, 25, "Welcome to Ace Pilot")
+  GraphicsWindow.DrawText(0, 50,  "Hold the space bar and release to fly your sortie.")
+  GraphicsWindow.DrawText(0, 70,  "A power level less than " + powerLevels[1] + " will not even get your plane off the ground.")
+  GraphicsWindow.DrawText(0, 90,  "A power level of " + powerLevels[1] + " to " + powerLevels[2] + " will gain missile lock, required for your missile to hit.")
+  GraphicsWindow.DrawText(0, 110,  "A power level of " + powerLevels[2] + " to " + powerLevels[3] + " will fire your machine guns, which requires tactical positioning.")
+  GraphicsWindow.DrawText(0, 130,  "A power level of " + powerLevels[3] + " to " + powerLevels[4] + " will fire a missile, which needs missile lock first.")
+  GraphicsWindow.DrawText(0, 150,  "A power level of " + powerLevels[4] + " to " + powerLevels[5] + " will gain tactical positioning, required for your machine guns to hit.")
+  GraphicsWindow.DrawText(0, 170,  "A power level of " + powerLevels[5] + " to " + powerLevels[6] + " will automatically win the battle like the courageous ace you are.")
+  GraphicsWindow.DrawText(0, 190,  "A power level above " + powerLevels[6] + " will fly right past the enemy without turning to shoot.")
+  
+EndSub
+
+Sub prepVars
+  charging = 0
+  hasLock = 0
+  hasTactical = 0
+  launchesRemaining = 8
+  kills = 0
+
+EndSub
+
+Sub scoreBoard
+  GraphicsWindow.DrawText(GraphicsWindow.Width /2 + 50, 25,"Launches Remaining " + launchesRemaining)
+  GraphicsWindow.DrawText(GraphicsWindow.Width /2 + 50, 40,"             Kills " + kills)
+EndSub
+
+
+
+
+Sub keyDown
+  if GraphicsWindow.LastKey = "Space" and launchesRemaining > 0 And charging = 0 then
+    timeDown = Clock.ElapsedMilliseconds
+    charging = 1
+    launchesRemaining = launchesRemaining - 1
+
+  elseif GraphicsWindow.LastKey = "N" then
+    prepVars()
+  EndIf
+EndSub
+ 
+ 
+ 
+Sub keyUp
+  if GraphicsWindow.LastKey = "Space" Then
+  If charging = 1 Then
+    timeElapsed = Clock.ElapsedMilliseconds - timeDown
+    charging = 0
+    GraphicsWindow.Clear()
+    power = timeElapsed / 9
+    power = Math.Max(5, power)
+    power = Math.Min(100, power)
+    power = Math.Round(power)
+    GraphicsWindow.DrawText(0, 75, "Initiative attempt of " + power + "%.")
+    If power > powerLevels[6] Then
+      GraphicsWindow.DrawText(0, 100, "You tried too hard, you were going so fast you flew right past him.")
+    ElseIf power > powerLevels[5] Then
+      GraphicsWindow.DrawText(0, 100, "You shoot down an enemy aircraft.")
+      kills=kills + 1
+    ElseIf power > powerLevels[4] Then
+      If hasTactical = 1 then
+        GraphicsWindow.DrawText(0, 100, "You already had tactical positioning. ")
+      else
+        GraphicsWindow.DrawText(0, 100, "You gain tactical positioning.")
+        hasTactical = 1
+      endif
+    ElseIf power > powerLevels[3] Then
+      GraphicsWindow.DrawText(0, 100, "You fire a missile.")
+      If hasLock = 1 then
+        hasLock = 0 
+        GraphicsWindow.DrawText(0, 120, "The missile tracks straight into the enemy's engine and erupts into a ball of flame.")  
+         kills=kills + 1
+      Else
+        GraphicsWindow.DrawText(0, 120, "You didn't have lock. The missile drifts away aimlessly into the sunset.")  
+      endif
+    ElseIf power > powerLevels[2] Then
+      GraphicsWindow.DrawText(0, 100, "Too close for missiles; switching to guns.")
+      If hasTactical = 1 then
+        GraphicsWindow.DrawText(0, 120, "Your machine gun rips holes all over the fuselage. They are going down.")  
+         kills=kills + 1
+        hasTactical = 0
+      Else
+        GraphicsWindow.DrawText(0, 120, "Without tactical advantage, your tracers miss the plane.")  
+      endif
+    ElseIf power > powerLevels[1] Then
+      If hasLock = 1 then
+        GraphicsWindow.DrawText(0, 100, "You already had missile lock. ")
+      else
+        GraphicsWindow.DrawText(0, 100, "Missile Lock! Fire when ready.")
+        hasLock = 1
+      EndIf
+    else  
+      GraphicsWindow.DrawText(0, 100, "You must be running low on fuel, or courage, because you avoid the battle and live to fight another day.")
+   EndIf
+   EndIf
+   If launchesRemaining = 0 then
+      GraphicsWindow.Clear()
+      GraphicsWindow.DrawText(0, 25, "Hope you enjoyed Ace Pilot")
+      ' Make if statement here that tells people how awesome or terrible they are based on their score. If kills is 5, they are an ace. If 0. maybe they are a chicken or make fun of them in some niceish way.
+      'Maybe  something like "With x kills you are rated..."
+      GraphicsWindow.DrawText(0, 50, "Press 'N' for a new game.")
+   EndIf
+   scoreBoard()
+ EndIf 
+
+EndSub
